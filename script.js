@@ -69,4 +69,3 @@ function saveLoginData(date, seatNumber, studentId) {
     
     localStorage.setItem('loginRecords', JSON.stringify(logins));
 }
-
