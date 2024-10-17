@@ -46,31 +46,26 @@ submitBtn.addEventListener('click', async () => {
         selectedSeat.classList.add('registered'); // 設置為已登錄狀態
         selectedSeat.innerText += `\n${studentId}`; // 顯示學號
 
-        // 儲存登錄資訊到伺服器
-        try {
-            await fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ date, seatNumber, studentId })
-            });
+        // 儲存登錄資訊到 Local Storage
+        saveLoginData(date, seatNumber, studentId);
 
-            // 儲存座位狀態到 Local Storage
-            localStorage.setItem(`seat-${seatNumber}`, JSON.stringify({ studentId }));
-
-            alert("登錄成功！");
-            
-            studentIdInput.value = ''; // 清空輸入框
-            loginForm.style.display = 'none'; // 隱藏學號輸入框
-            selectedSeat = null; // 重置選中座位
-            
-        } catch (error) {
-            console.error("Error:", error);
-            alert("登錄失敗，請稍後再試。");
-        }
+        alert("登錄成功！");
+        
+        studentIdInput.value = ''; // 清空輸入框
+        loginForm.style.display = 'none'; // 隱藏學號輸入框
+        selectedSeat = null; // 重置選中座位
         
     } else {
         alert("請選擇一個座位並輸入學號！");
     }
 });
+
+// 儲存登錄資訊到 Local Storage
+function saveLoginData(date, seatNumber, studentId) {
+    const logins = JSON.parse(localStorage.getItem('loginRecords')) || [];
+    
+    // 添加新紀錄
+    logins.push({ date, seatNumber, studentId });
+    
+    localStorage.setItem('loginRecords', JSON.stringify(logins));
+}
