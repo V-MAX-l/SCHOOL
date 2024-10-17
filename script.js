@@ -68,3 +68,5 @@ function saveLoginData(date, seatNumber, studentId) {
     logins.push({ date, seatNumber, studentId });
     
     localStorage.setItem('loginRecords', JSON.stringify(logins));
+}
+
