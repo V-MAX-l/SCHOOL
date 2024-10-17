@@ -36,4 +36,3 @@ function displayLoginRecords() {
 
 // 初始化顯示紀錄
 displayLoginRecords();
-
