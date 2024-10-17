@@ -3,8 +3,7 @@ const recordsBody = document.getElementById('records-body');
 // 從 Local Storage 獲取紀錄並顯示
 function displayLoginRecords() {
     const logins = JSON.parse(localStorage.getItem('loginRecords')) || [];
-    console.log("Login records from localStorage:", logins); // 添加日誌以檢查紀錄
-
+    
     if (logins.length === 0) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
@@ -34,6 +33,3 @@ function displayLoginRecords() {
         recordsBody.appendChild(row);
     });
 }
-
-// 初始化顯示紀錄
-displayLoginRecords();
