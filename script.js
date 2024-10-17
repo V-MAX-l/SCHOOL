@@ -1,3 +1,4 @@
+
 const seatsContainer = document.getElementById('seats-container');
 const loginForm = document.getElementById('login-form');
 const studentIdInput = document.getElementById('student-id');
