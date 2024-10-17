@@ -1,4 +1,3 @@
-
 const recordsBody = document.getElementById('records-body');
 
 // 從 Local Storage 獲取紀錄並顯示
