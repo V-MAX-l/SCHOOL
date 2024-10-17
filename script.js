@@ -1,41 +1,5 @@
-const seatsContainer = document.getElementById('seats-container');
-const loginForm = document.getElementById('login-form');
-const studentIdInput = document.getElementById('student-id');
-const submitBtn = document.getElementById('submit-btn');
-const currentDateElement = document.getElementById('current-date');
-
-let selectedSeat = null;
-
-// 顯示今日日期
-currentDateElement.textContent = new Date().toLocaleDateString();
-
-// 創建72個座位並初始化狀態
-for (let i = 1; i <= 72; i++) {
-    const seat = document.createElement('div');
-    seat.classList.add('seat');
-    seat.innerText = i;
-
-    // 初始化座位狀態
-    const seatStatus = JSON.parse(localStorage.getItem(`seat-${i}`));
-    if (seatStatus) {
-        seat.classList.add('registered');
-        seat.innerText += `\n${seatStatus.studentId}`; // 顯示學號
-    }
-
-    // 點擊座位事件
-    seat.addEventListener('click', () => {
-        if (!selectedSeat && !seat.classList.contains('registered')) {
-            seat.classList.add('selected');
-            selectedSeat = seat; // 記錄選中的座位
-            loginForm.style.display = 'block'; // 顯示學號輸入框
-        }
-    });
-
-    seatsContainer.appendChild(seat);
-}
-
 // 登錄按鈕事件
-submitBtn.addEventListener('click', () => {
+submitBtn.addEventListener('click', async () => {
     const studentId = studentIdInput.value.trim();
     
     if (studentId && selectedSeat) {
@@ -46,8 +10,14 @@ submitBtn.addEventListener('click', () => {
         selectedSeat.classList.add('registered'); // 設置為已登錄狀態
         selectedSeat.innerText += `\n${studentId}`; // 顯示學號
 
-        // 儲存登錄資訊到 Local Storage
-        saveLoginData(date, seatNumber, studentId);
+        // 發送登錄資訊到伺服器
+        await fetch('http://localhost:3000/login', { // 替換為您的伺服器地址
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ date, seatNumber, studentId })
+        });
 
         alert("登錄成功！");
         
@@ -60,15 +30,19 @@ submitBtn.addEventListener('click', () => {
     }
 });
 
-// 儲存登錄資訊到 Local Storage
-function saveLoginData(date, seatNumber, studentId) {
-    const logins = JSON.parse(localStorage.getItem('loginRecords')) || [];
-    
-    // 添加新紀錄
-    logins.push({ date, seatNumber, studentId });
-    
-    localStorage.setItem('loginRecords', JSON.stringify(logins));
+// 在頁面加載時獲取所有登錄紀錄
+async function fetchLoginRecords() {
+    const response = await fetch('http://localhost:3000/records'); // 替換為您的伺服器地址
+    const records = await response.json();
 
-    // 儲存座位狀態到 Local Storage
-    localStorage.setItem(`seat-${seatNumber}`, JSON.stringify({ studentId }));
+    records.forEach(record => {
+        const seatElement = document.querySelector(`.seat:nth-child(${record.seatNumber})`);
+        if (seatElement) {
+            seatElement.classList.add('registered');
+            seatElement.innerText += `\n${record.studentId}`; // 顯示學號
+        }
+    });
 }
+
+// 初始化獲取紀錄
+fetchLoginRecords();
