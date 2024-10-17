@@ -25,3 +25,8 @@ body {
 .seat.registered {
     background-color: blue;
     color: white;
+}
+
+.seat:hover {
+   background-color: lightyellow; /* 增加 hover 效果 */
+}
