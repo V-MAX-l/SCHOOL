@@ -35,7 +35,7 @@ for (let i = 1; i <= 72; i++) {
 }
 
 // 登錄按鈕事件
-submitBtn.addEventListener('click', async () => {
+submitBtn.addEventListener('click', () => {
     const studentId = studentIdInput.value.trim();
     
     if (studentId && selectedSeat) {
