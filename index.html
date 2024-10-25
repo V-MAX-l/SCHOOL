@@ -4,19 +4,161 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>自修中心登錄</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #seats-container {
+            display: grid;
+            grid-template-columns: repeat(12, 50px);
+            grid-gap: 10px;
+            margin: 20px auto;
+        }
+        .seat {
+            width: 50px;
+            height: 50px;
+            background-color: lightgray;
+            border: 1px solid #000;
+            cursor: pointer;
+        }
+        .seat.selected {
+            background-color: yellow; /* 選中狀態 */
+        }
+        .seat.registered {
+            background-color: blue; /* 已登錄狀態 */
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <div id="dateDisplay"></div>
-    <div class="seating-area">
-        <div class="seat" onclick="selectSeat(this, 1)"></div>
-        <div class="seat" onclick="selectSeat(this, 2)"></div>
-        <div class="seat" onclick="selectSeat(this, 3)"></div>
-        <!-- 繼續添加座位直到72個 -->
-        <div class="seat" onclick="selectSeat(this, 72)"></div>
+    <h1>自修中心登錄 (今日日期：<span id="current-date"></span>)</h1>
+    <div id="seats-container"></div>
+
+    <div id="login-form" style="display: none;">
+        <input type="text" id="student-id" placeholder="請輸入學號">
+        <button id="submit-btn">登錄</button>
     </div>
-    <input type="text" id="studentId" placeholder="輸入學號">
-    <button onclick="submitSeat()">登錄</button>
-    <script src="script.js"></script>
+
+    <div style="position: fixed; bottom: 10px; right: 10px;">
+        <a href="records.html" style="text-decoration: none; color: blue;">查看歷史紀錄</a>
+    </div>
+
+    <script>
+        const seatsContainer = document.getElementById('seats-container');
+        const loginForm = document.getElementById('login-form');
+        const studentIdInput = document.getElementById('student-id');
+        const submitBtn = document.getElementById('submit-btn');
+        const currentDateElement = document.getElementById('current-date');
+
+        // 顯示今日日期
+        currentDateElement.textContent = new Date().toLocaleDateString();
+
+        // 從 localStorage 獲取已登錄的座位資料
+        let records = JSON.parse(localStorage.getItem("records")) || [];
+
+        // 清空過期的紀錄（超過一個月）
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        
+        records = records.filter(record => new Date(record.date) >= oneMonthAgo);
+        
+        // 更新 localStorage
+        localStorage.setItem("records", JSON.stringify(records));
+
+        // 檢查是否需要每日清空
+        const lastClearDate = localStorage.getItem("lastClearDate");
+        const now = new Date();
+        
+        if (!lastClearDate || new Date(lastClearDate).toDateString() !== now.toDateString()) {
+            // 如果今天日期與上次清空日期不同，則清空紀錄
+            records.forEach((_, index) => {
+                const seat = document.querySelector(`.seat:nth-child(${index + 1})`);
+                if (seat) {
+                    seat.classList.remove('registered'); // 移除已登錄狀態
+                    seat.innerText = index + 1; // 重置座位顯示
+                }
+            });
+            localStorage.removeItem("records"); // 清空所有紀錄
+            localStorage.setItem("lastClearDate", now.toISOString()); // 記錄今天的日期
+            alert("今日的紀錄已清空！");
+        }
+
+        // 創建72個座位
+        for (let i = 1; i <= 72; i++) {
+            const seat = document.createElement('div');
+            seat.classList.add('seat');
+            seat.innerText = i;
+
+            // 檢查是否已登錄
+            const record = records.find(r => r.seatNumber == i);
+            if (record) {
+                seat.classList.add('registered'); // 設置為已登錄狀態
+                seat.innerText += `\n${record.studentId}`; // 顯示學號
+            }
+
+            // 點擊座位事件
+            seat.addEventListener('click', () => {
+                if (!seat.classList.contains('registered')) { // 如果未被註冊
+                    // 取消其他座位的選中狀態
+                    document.querySelectorAll('.seat.selected').forEach(s => s.classList.remove('selected'));
+                    
+                    seat.classList.add('selected'); // 設置當前選中的座位
+                    loginForm.style.display = 'block'; // 顯示學號輸入框
+                }
+            });
+
+            seatsContainer.appendChild(seat);
+        }
+
+        // 登錄按鈕事件
+        submitBtn.addEventListener('click', () => {
+            const studentId = studentIdInput.value.trim();
+            
+            if (studentId === "0000") {
+                // 清空所有紀錄和座位狀態
+                localStorage.removeItem("records");
+                records.forEach((_, index) => {
+                    const seat = document.querySelector(`.seat:nth-child(${index + 1})`);
+                    if (seat) {
+                        seat.classList.remove('registered'); // 移除已登錄狀態
+                        seat.innerText = index + 1; // 重置座位顯示
+                    }
+                });
+                alert("所有紀錄已清空！");
+                return;
+            }
+
+            if (studentId) {
+                const selectedSeatNumber = [...document.querySelectorAll('.seat')].find(seat => seat.classList.contains('selected')).innerText.split('\n')[0];
+
+                // 檢查學號是否已存在於紀錄中
+                if (records.some(record => record.studentId === studentId)) {
+                    alert("該學號已經登錄過，請使用其他學號！");
+                    return;
+                }
+
+                // 更新座位狀態
+                const selectedSeat = [...document.querySelectorAll('.seat')].find(seat => seat.innerText.startsWith(selectedSeatNumber));
+                selectedSeat.classList.remove('selected'); // 移除選中狀態
+                selectedSeat.classList.add('registered'); // 設置為已登錄狀態
+                selectedSeat.innerText += `\n${studentId}`; // 顯示學號
+
+                // 將資料存儲到 records 陣列中
+                records.push({ date: currentDateElement.textContent, seatNumber: selectedSeatNumber, studentId });
+                
+                // 更新 localStorage
+                localStorage.setItem("records", JSON.stringify(records));
+
+                studentIdInput.value = ''; // 清空輸入框
+                loginForm.style.display = 'none'; // 隱藏學號輸入框
+                
+                alert("登錄成功！");
+                
+            } else {
+                alert("請輸入學號！");
+            }
+        });
+    </script>
 </body>
 </html>
